@@ -1,0 +1,2 @@
+make re
+python3 ./main.py
