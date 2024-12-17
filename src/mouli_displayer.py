@@ -1,21 +1,30 @@
 import curses
 import data_finder
-import main
+import math
 import time
 
-current_data = None
+current_data      = None
 last_data_update  = 0
 data_update_delay = 30
+current_data_url  = ""
 
 last_screen_update  = 0
 screen_update_delay = 1 / 60
 
 
-def get_data(url, data, force = False):
-    global current_data
+def loading(stdscr: curses.window):
+    stdscr.addstr(0, 0, f"Loading...", curses.color_pair(244))
 
-    if time.time() - last_data_update > data_update_delay or force:
+def get_data(url, data, stdscr: curses.window, force = False):
+    global current_data, last_data_update
+
+    if time.time() - last_data_update > data_update_delay or force or current_data_url != url:
+        loading(stdscr)
+        stdscr.refresh()
         current_data = data_finder.ecofetch_data(data["token"], f"{data_finder.base_url}/{url}", force)
+        current_data["data"].reverse()
+        stdscr.clear()
+        last_data_update = time.time()
 
     return current_data
 
@@ -26,6 +35,11 @@ def load():
     stdscr.nodelay(True)
     curses.noecho()
     curses.cbreak()
+
+    curses.start_color()
+    curses.use_default_colors()
+    for i in range(0, curses.COLORS):
+        curses.init_pair(i, i, -1)
 
     return stdscr
 
@@ -47,16 +61,49 @@ def renderer(data, stdscr: curses.window):
     main_panel(data, stdscr)
     stdscr.refresh()
 
-counter = 1
+def main_panel_keyhandler(data, stdscr: curses.window):
+    typed_char = stdscr.getch()
+    while typed_char != -1:
+        if typed_char == ord('q'):
+            data["running"] = False
+
+        if typed_char == curses.KEY_DOWN:
+            data["start_line"] = data.get("start_line", int(curses.LINES / 2)) - 1
+        if typed_char == curses.KEY_UP:
+            data["start_line"] = data.get("start_line", int(curses.LINES / 2)) + 1
+        typed_char = stdscr.getch()
 
 def main_panel(data, stdscr: curses.window):
-    global counter
-    mouli_data = get_data("2024", data)
+    data["frames_counter"] = data.get("frames_counter", 0) + 1
+    mouli_data = get_data("2024", data, stdscr)
 
-    if stdscr.getch() == ord('q'):
-        data["running"] = False
+    main_panel_keyhandler(data, stdscr)
 
-    stdscr.addstr(1, 1, f"|{counter}|{ord('q')}|{stdscr.getch()}|{data["running"]}|")
-    counter += 1
-    
+    current_line = -1
+    index = (data.get("start_line", int(curses.LINES / 2))) + 1
+    amount_of_project = len(mouli_data["data"])
+
+    stdscr.addstr(int(curses.LINES / 2), int(curses.COLS / 4), "-->", curses.color_pair(1))
+
+    index *= -1
+    while True:
+        current_line += 1
+        index += 1
+        if current_line < 0:
+            continue
+        project = mouli_data["data"][index % amount_of_project]
+        project_info = project["project"]
+        if current_line >= curses.LINES:
+            break
+        stdscr.addstr(current_line, 
+            int(curses.COLS / 2 - len(project_info["name"]) / 2), f"{project_info["name"]}",
+            curses.color_pair(2))
+        
+    target_index = (data.get("start_line", int(curses.LINES / 2)) - int(curses.LINES / 2)) * -1
+    stdscr.addstr(1, 1, 
+                  f"|{data["frames_counter"]}|" +
+                  f"{data.get("start_line", int(curses.LINES / 2)) - 1}|" +
+                  f"{mouli_data["data"][target_index % amount_of_project]["project"]["name"]}|", 
+                  curses.color_pair(3))
+
     
