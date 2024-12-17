@@ -5,6 +5,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
+import os
+import time
 
 def start_driver():
     chrome_options = Options()
@@ -37,9 +39,9 @@ def start_driver():
 def get_local_storage_item(driver, key):
     return driver.execute_script(f"return window.localStorage.getItem('{key}');")
 
-def get_token():
-    connextion_url="https://login.microsoftonline.com/common/oauth2/authorize?client_id=c3728513-e7f6-497b-b319-619aa86f5b50&nonce=28d21af4-1b1e-403b-8830-ff270cc05ddb&redirect_uri=https%3A%2F%2Fmy.epitech.eu%2Findex.html&response_type=id_token&state=fragment%3Dy%252F2024"
-    cookiejar = browser_cookie3.firefox(domain_name='microsoftonline.com')
+def get_newtoken():
+    connextion_url = "https://login.microsoftonline.com/common/oauth2/authorize?client_id=c3728513-e7f6-497b-b319-619aa86f5b50&nonce=28d21af4-1b1e-403b-8830-ff270cc05ddb&redirect_uri=https%3A%2F%2Fmy.epitech.eu%2Findex.html&response_type=id_token&state=fragment%3Dy%252F2024"
+    cookiejar = browser_cookie3.firefox(domain_name = 'microsoftonline.com')
     driver = start_driver()
     driver.get(connextion_url)
 
@@ -54,6 +56,7 @@ def get_token():
         driver.add_cookie(cookie_dict)
 
     driver.refresh()
+    time.sleep(2)
 
     value = get_local_storage_item(driver, 'argos-api.oidc-token')
     if value:
@@ -63,3 +66,16 @@ def get_token():
     driver.close()
     return value
     
+def save_token(token):
+    os.makedirs(os.path.dirname("data/token_file"), exist_ok=True)
+    with open("data/token_file", "w") as file:
+        file.write(token)
+
+def load_token():
+    if not os.path.isfile("data/token_file"):
+        token = get_newtoken()
+        save_token(token)
+    else:
+        with open("data/token_file", "r") as file:
+            token = file.read()
+    return token

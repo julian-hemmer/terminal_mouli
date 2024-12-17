@@ -1,15 +1,14 @@
 import data_finder
 import token_updater
-import json
-
-base_url = "https://api.epitest.eu/me"
+import curses
+import mouli_displayer
+import traceback
 
 def get_percent(mouli):
-    passed = 0.0
+    passed = 0.0    
     total = 0.0
 
     for result in mouli["results"]["skills"]:
-        #print("------- " + str(mouli["results"]["skills"][result]))
         total  += int(mouli["results"]["skills"][result]["count"])
         passed += int(mouli["results"]["skills"][result]["passed"])
     if total <= 0:
@@ -20,14 +19,20 @@ def parse_data(mouli):
     return f"{mouli["project"]["name"]}:{get_percent(mouli)}\n"
 
 def main():
-    token = data_finder.load_token()
-    data = data_finder.fetch_data(token, f"{base_url}/2024")
+    data = {}
+    data["token"] = token_updater.load_token()
+    data["running"] = True
 
-    data.reverse()
-    print(f"{data}\n\n\n\n\n\n\n")
-    with open("mouli_data", "w") as file:
-        for mouli in data:
-            file.write(parse_data(mouli))
+    stdscr = mouli_displayer.load()
+    try:
+        while data["running"]:
+            mouli_displayer.renderer(data, stdscr)
+    except Exception as e:
+        mouli_displayer.unload(stdscr)
+        traceback.print_exc()
+        print(e)
+    else:
+        mouli_displayer.unload(stdscr)
 
 if __name__ == "__main__":
     main()

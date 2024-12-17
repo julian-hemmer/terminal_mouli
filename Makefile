@@ -1,12 +1,12 @@
 main_file=start
 
-token_file=token_save
+data_folder=./data/
 
 re:
 	chmod +x $(main_file)
 
 start: re
-	./start
+	bash ./start
 
 clean:
-	rm $(token_file)
+	rm -r $(data_folder)
