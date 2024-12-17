@@ -11,11 +11,11 @@ last_screen_update  = 0
 screen_update_delay = 1 / 60
 
 
-def get_data(url, force = False):
+def get_data(url, data, force = False):
     global current_data
 
     if time.time() - last_data_update > data_update_delay or force:
-        current_data = data_finder.ecofetch_data(main.token, f"{data_finder.base_url}/{url}", force)
+        current_data = data_finder.ecofetch_data(data["token"], f"{data_finder.base_url}/{url}", force)
 
     return current_data
 
@@ -51,7 +51,7 @@ counter = 1
 
 def main_panel(data, stdscr: curses.window):
     global counter
-    #data = get_data("2024")
+    mouli_data = get_data("2024", data)
 
     if stdscr.getch() == ord('q'):
         data["running"] = False
