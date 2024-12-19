@@ -4,20 +4,6 @@ import curses
 import mouli_displayer
 import traceback
 
-def get_percent(mouli):
-    passed = 0.0    
-    total = 0.0
-
-    for result in mouli["results"]["skills"]:
-        total  += int(mouli["results"]["skills"][result]["count"])
-        passed += int(mouli["results"]["skills"][result]["passed"])
-    if total <= 0:
-        return -1.0
-    return (passed / total) * 100.0
-
-def parse_data(mouli):
-    return f"{mouli["project"]["name"]}:{get_percent(mouli)}\n"
-
 def main():
     data = {}
     data["token"] = token_updater.load_token()

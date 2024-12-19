@@ -55,8 +55,7 @@ def get_newtoken():
             cookie_dict['path'] = cookie.path
         driver.add_cookie(cookie_dict)
 
-    driver.refresh()
-    time.sleep(2)
+    driver.get(connextion_url)
 
     value = get_local_storage_item(driver, 'argos-api.oidc-token')
     if value:
