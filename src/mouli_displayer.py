@@ -278,9 +278,6 @@ def render_target_info(stdscr: curses.window, target_data):
     start_x = int(curses.COLS / 4) + 8
     width = curses.COLS - start_x
 
-    project_ratio = get_project_ratio(target_data)
-    ratio_color = get_color_from_ratio(project_ratio)
-    bold_ratio_color = ratio_color | curses.A_BOLD
     bold_gold = curses.color_pair(3) | curses.A_BOLD
     bold_gray = curses.color_pair(244) | curses.A_BOLD
     bold_magenta = curses.color_pair(147) | curses.A_BOLD
@@ -291,8 +288,11 @@ def render_target_info(stdscr: curses.window, target_data):
 
     cprint(stdscr, format_string(f"{get_elapsed_time_formatted(target_data["date"])} ⌛", width - 10, "right"), 1, start_x + 5, modifier = curses.color_pair(217))
 
+    project_ratio = 0
+
     prerequisites = target_data["results"]["prerequisites"]
     if prerequisites == 2.0:
+        project_ratio = get_project_ratio(target_data)
         cprint(stdscr, f"🔵 Prerequisites Met", 1, start_x + 4, modifier = cyan)
     elif prerequisites == 1.5:
         cprint(stdscr, f"🔴 Crashed", 1, start_x + 4, modifier = bold_red)
@@ -302,6 +302,9 @@ def render_target_info(stdscr: curses.window, target_data):
         cprint(stdscr, f"🔴 Delivery Error", 1, start_x + 4, modifier = red)
     elif prerequisites == 0.0:
         cprint(stdscr, f"🔴 Banned Function", 1, start_x + 4, modifier = red)
+
+    ratio_color = get_color_from_ratio(project_ratio)
+    bold_ratio_color = ratio_color | curses.A_BOLD
 
     #second_line_len = len(f"[ {target_data["project"]["module"]["code"]} ]") + len(" [ 100.00% ]")
     second_line_len = len(f"[ {target_data["project"]["module"]["code"]} ]")
@@ -325,16 +328,16 @@ def render_target_info(stdscr: curses.window, target_data):
     cprint(stdscr, " " * ((width - 10) - completion_len))
     cprint(stdscr, "╷", modifier = bold_gray)
 
-    cprint(stdscr, "└", 4, start_x + 4, modifier = bold_gray)
+    cprint(stdscr, "├", 4, start_x + 4, modifier = bold_gray)
     cprint(stdscr, "─" * (width - 10), modifier = bold_gray)
     cprint(stdscr, "┘", modifier = bold_gray)
 
     cprint(stdscr, "│", 5, start_x + 4, modifier = bold_gray)
     cov_line = get_extitem_value(target_data, "coverage.lines")
     cov_branches = get_extitem_value(target_data, "coverage.branches")
-    cprint(stdscr, f" {cov_line:.1f}", modifier = get_color_from_ratio(cov_line / 100))
+    cprint(stdscr, format_string(f" {cov_line:.1f}", 5), modifier = get_color_from_ratio(cov_line / 100))
     cprint(stdscr, f" │ ", modifier = bold_gray)
-    cprint(stdscr, f"{cov_branches:.1f}", modifier = get_color_from_ratio(cov_line / 100))
+    cprint(stdscr, format_string(f" {cov_branches:.1f}", 5), modifier = get_color_from_ratio(cov_line / 100))
     cprint(stdscr, f" │ ", modifier = bold_gray)
 
 def format_string(string, length, alignement = "left"):
